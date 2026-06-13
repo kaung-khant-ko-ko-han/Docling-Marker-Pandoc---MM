@@ -73,10 +73,10 @@ class MarkdownChunker:
         if current_chunk:
             chunks.append("\n".join(current_chunk))
         
-        # Fallback: if any chunk exceeds max_lines, hard split by lines
+        # Fallback: if any chunk exceeds max_lines, hard split by lines (FIXED)
         final_chunks = []
         for chunk in chunks:
-            lines_in_chunk = chunk.count('\n') + 1
+            lines_in_chunk = len(chunk.splitlines())  # More reliable than counting '\n'
             if lines_in_chunk > self.max_lines:
                 # Hard split by lines
                 sub_lines = chunk.splitlines()
