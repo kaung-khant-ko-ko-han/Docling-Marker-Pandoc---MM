@@ -1125,3 +1125,166 @@ Logging is configured via `utils.setup_logging()` using Rich. Errors are caught 
 ---
 
 This implementation meets all requirements: production-ready, modular, type-hinted, with resume, parallel batch, validation, chunking, and full CLI.
+
+---
+
+အောက်ပါအတိုင်း **PDF ကို Markdown သို့ ပြောင်းပေးသည့် Tool (Marker ကိုသုံးထားသည်)** ကို မြန်မာလို အသေးစိတ် ရှင်းပြပေးလိုက်ပါတယ်။
+
+---
+
+## ၁။ ဒီ Tool ဘာအတွက်လဲ။
+
+PDF ဖိုင်တွေ (စာအုပ်၊ စာတမ်း၊ သုတေသနစာတမ်း၊ နည်းပညာလက်စွဲ) ကို **Markdown** ဖော်မတ်ပြောင်းပေးတဲ့ tool ဖြစ်တယ်။  
+အဓိက ရည်ရွယ်ချက်က **AI ဘာသာပြန်ခြင်း (Machine Translation)** အတွက် ကြိုတင်ပြင်ဆင်ဖို့ပါ။
+
+> Marker ဆိုတာ PDF ထဲက စာလုံးတွေ၊ ဇယားတွေ၊ သင်္ချာပုံသေနည်းတွေ၊ ရုပ်ပုံတွေကို မှန်မှန်ကန်ကန် Markdown အဖြစ် ထုတ်ပေးတဲ့ Library ဖြစ်တယ်။
+
+---
+
+## ၂။ ဒီ Tool ရဲ့ ထူးခြားချက် (Features)
+
+1. **PDF တစ်ခုချင်းစီ ပြောင်းခြင်း**  
+   `python main.py convert book.pdf` ဆိုရင် `output/book/` အောက်မှာ `.md` ဖိုင်၊ `images/` ဖိုလ်ဒါ၊ `metadata.json` ထွက်လာမယ်။
+
+2. **တစ်ခါတည်း အများကြီး (Batch) ပြောင်းခြင်း**  
+   `python main.py batch books/` ဆိုရင် `books/` ထဲက PDF အားလုံးကို တစ်ပြိုင်နက် ပြောင်းပေးတယ်။
+
+3. **အခန်းကြီးခွဲခြင်း (Chapter Detection)**  
+   `# Chapter 1`, `## 1.1` စသည်ဖြင့် Heading တွေကို ဖတ်ပြီး `chapters/chapter_001.md` စသဖြင့် အလိုအလျောက် ခွဲပေးတယ်။
+
+4. **Metadata ထုတ်ယူခြင်း**  
+   စာအုပ်နာမည်၊ စာရေးဆရာ၊ စာမျက်နှာအရေအတွက်၊ ဘာသာစကား၊ ဇယားအရေအတွက် စတာတွေကို `metadata.json` မှာ သိမ်းပေးတယ်။
+
+5. **ပုံများ သီးခြားသိမ်းခြင်း**  
+   PDF ထဲက ရုပ်ပုံတွေကို `images/` ဖိုလ်ဒါထဲ ထုတ်ပြီး Markdown ထဲက လင့်ခ်တွေကို အလိုအလျောက် ပြင်ပေးတယ်။
+
+6. **LLM အတွက် အပိုင်းပိုင်းခွဲခြင်း (Chunking)**  
+   ဘာသာပြန်ရလွယ်အောင် ၂၀,၀၀၀ စာလုံးခန့် အပိုင်းပိုင်းခွဲပေးတယ်။ (Code block, table, math ကို မဖျက်ဘဲ ခွဲပေးတယ်)
+
+7. **အရည်အသွေး စစ်ဆေးခြင်း (Validation)**  
+   - ပုံလင့်ခ်ကျိုးနေလား  
+   - Code block ပိတ်ဖို့မေ့နေလား  
+   - Table ပုံစံမှန်မှန်လား  
+   စစ်ပြီး `validation_report.json` ထုတ်ပေးတယ်။
+
+8. **ကြားဖြတ်မှတ်တမ်းနှင့် ပြန်စနိုင်ခြင်း (Resume)**  
+   စာမျက်နှာ ၂၀၀၀ ရှိတဲ့ စာအုပ်ကို ပြောင်းနေရင်း ရပ်သွားရင် နောက်တစ်ခါ run တဲ့အခါ `--resume` နဲ့ ပြန်ဆက်လုပ်လို့ရတယ်။
+
+9. **အပြိုင်လုပ်ဆောင်ခြင်း (Parallel Processing)**  
+   `--workers 8` ဆိုရင် PDF ၈ ဖိုင် တစ်ပြိုင်တည်း ပြောင်းပေးတယ် (မြန်ဆန်စေတယ်)။
+
+10. **Configuration စနစ်**  
+    `config.yaml` ဖိုင်ထဲမှာ chunk အရွယ်၊ worker အရေအတွက်၊ chapter ဖော်ထုတ်ပုံ pattern စတာတွေ သတ်မှတ်လို့ရတယ်။
+
+---
+
+## ၃။ ဘယ်လို Install လုပ်မလဲ။
+
+**လိုအပ်ချက်**  
+- Python 3.11 သို့မဟုတ် အပေါ်  
+- RAM အနည်းဆုံး 8GB (စာမျက်နှာများရင် 16GB ပိုကောင်း)  
+- Marker ရဲ့ AI မော်ဒယ်တွေ ပထမဆုံး run ချိန်မှာ download လုပ်မယ် (အင်တာနက်လိုအပ်၊ ဖိုင်အရွယ် ~2GB)
+
+```bash
+# Project folder ထဲမှာ
+pip install -r requirements.txt
+```
+
+`requirements.txt` ထဲမှာ ပါတဲ့ အဓိက package တွေ  
+- `marker-pdf`  
+- `pydantic`, `typer`, `rich`, `tqdm`, `pyyaml`, `pypdf2`
+
+---
+
+## ၄။ ဘယ်လို Run မလဲ။ (Command နမူနာများ)
+
+### (က) PDF တစ်ခုတည်း
+```bash
+python main.py convert mybook.pdf --output-dir ./output/mybook
+```
+ထွက်လာမယ့် ဖိုင်တွေ
+```
+output/mybook/
+├── mybook.md
+├── images/
+├── chapters/
+├── chunks/
+├── metadata.json
+└── validation_report.json
+```
+
+### (ခ) တစ်ခါတည်း အများကြီး
+```bash
+python main.py batch ./pdf_folder/ --workers 4
+```
+
+### (ဂ) ကြားဖြတ်မှတ်ပြီး ပြန်စခြင်း
+```bash
+python main.py convert bigbook.pdf --resume
+```
+
+### (ဃ) အရည်အသွေး စစ်ခြင်း
+```bash
+python main.py validate output/mybook/mybook.md --images-dir output/mybook/images
+```
+
+---
+
+## ၅။ Project ဖွဲ့စည်းပုံ (အကျဉ်းချုပ်)
+
+| ဖိုင် | အလုပ် |
+|------|--------|
+| `main.py` | Command line interface (typer) |
+| `converter.py` | Marker ကို ခေါ်သုံးပြီး PDF → MD ပြောင်း |
+| `chapter_splitter.py` | Heading တွေကို ဖတ်ပြီး အခန်းခွဲ |
+| `chunker.py` | LLM အတွက် chunk ခွဲ (code/table မကျိုးအောင်) |
+| `validator.py` | Markdown အရည်အသွေး စစ် |
+| `metadata.py` | PDF ထဲက metadata ထုတ် |
+| `models.py` | Pydantic data models |
+| `utils.py` | logging, checkpoint, helper functions |
+| `config.yaml` | သတ်မှတ်ချက်များ |
+
+---
+
+## ၆။ ဘယ်လို အလုပ်လုပ်လဲ။ (Flow)
+
+1. **Marker** က PDF ကို Markdown + ပုံများ ထုတ်ပေး  
+2. ပုံတွေကို `images/` ဖိုလ်ဒါထဲ ရွှေ့ပြီး `.md` ထဲက လင့်ခ်တွေကို ပြင်ဆင်  
+3. Heading pattern အရ အခန်းများကို ခွဲ (optional)  
+4. Markdown syntax မကျိုးအောင် chunk ခွဲ (optional)  
+5. Validation အပြီး report ထုတ်  
+6. Metadata နဲ့ checkpoint တွေ သိမ်း  
+
+---
+
+## ၇။ သတိပြုရန် အချက်များ
+
+- **Marker** က scanned PDF (ဓာတ်ပုံရိုက်ထားတဲ့ စာမျက်နှာ) အတွက် OCR မပါပါဘူး။ OCR လိုရင် Marker + Tesseract ပေါင်းသုံးရန် လိုတယ်။  
+- စာမျက်နှာများတဲ့ PDF (၁၀၀၀+) အတွက် RAM များများ လိုအပ်နိုင်တယ်။  
+- `config.yaml` ထဲက `chunk_size` ကို သုံးမယ့် LLM (ChatGPT, Claude, Gemini) ရဲ့ context window အရ ချိန်ညှိပါ။  
+
+---
+
+## ၈။ ဥပမာ config.yaml အတိုချုပ်
+
+```yaml
+input_dir: ./books
+output_dir: ./output
+chunk_size: 20000
+workers: 4
+extract_images: true
+split_chapters: true
+validation_enabled: true
+chapter_patterns:
+  - "^#\\s+Chapter\\s+\\d+"
+  - "^##\\s+\\d+\\.\\d+"
+log_level: INFO
+```
+
+---
+
+## အနှစ်ချုပ်
+
+ဒီ tool ဟာ **Marker** ကိုအခြေခံထားပြီး **စာမျက်နှာ ၅၀၀ မှ ၂၀၀၀ အထိ** ရှိတဲ့ PDF တွေကိုတောင် ယုံကြည်စွာ ပြောင်းလဲနိုင်တယ်။  
+AI ဘာသာပြန်၊ RAG (Retrieval-Augmented Generation) စတဲ့ system များအတွက် ကြိုတင် processing လုပ်ဖို့ အဆင်ပြေစေတယ်။
+
