@@ -43,13 +43,18 @@ class PDFConverter:
         
         # Determine page range
         page_range = None
-        if self.config.page_start or self.config.page_end:
+        if self.config.page_start is not None or self.config.page_end is not None:
             page_range = (self.config.page_start or 0, self.config.page_end or 999999)
         
-        # Resume support: if checkpoint exists, resume from last page
+        # Resume support: if checkpoint exists, resume from next page
         if self.checkpoint and self.checkpoint.last_processed_page > 0:
             logger.info(f"Resuming from page {self.checkpoint.last_processed_page + 1}")
-            page_range = (self.checkpoint.last_processed_page, page_range[1] if page_range else 999999)
+            # START FROM NEXT PAGE (fixed off-by-one)
+            start_page = self.checkpoint.last_processed_page + 1
+            if page_range:
+                page_range = (start_page, page_range[1])
+            else:
+                page_range = (start_page, 999999)
         
         # Convert using marker
         self._load_marker_models()
@@ -117,7 +122,7 @@ class PDFConverter:
         logger.info(f"Conversion complete: {output_path}")
         return output_path, metadata
     
-    def _fix_image_links(self, md_path: Path, images_dir: Path):
+    def _fix_image_links(self, md_path: Path, images_dir: Path) -> None:
         """Update image links to point to local images directory."""
         with open(md_path, "r", encoding="utf-8") as f:
             content = f.read()
@@ -194,9 +199,7 @@ def batch_convert(input_dir: Path, output_dir: Path, workers: int, config_overri
         return results
 
 
-def _convert_job(job_config: ConversionConfig):
-    """Helper for multiprocessing."""
-    # Re-import inside function to avoid pickling issues
-    from .converter import PDFConverter
+def _convert_job(job_config: ConversionConfig) -> Tuple[Path, Metadata]:
+    """Helper for multiprocessing. No circular imports."""
     converter = PDFConverter(job_config)
     return converter.convert()
