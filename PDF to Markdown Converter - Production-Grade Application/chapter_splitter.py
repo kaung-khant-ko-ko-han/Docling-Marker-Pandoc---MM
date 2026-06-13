@@ -16,7 +16,7 @@ class ChapterSplitter:
     def __init__(self, config: AppConfig):
         self.patterns = [re.compile(p, re.IGNORECASE) for p in config.chapter_patterns]
     
-    def detect_chapters(self, markdown_text: str) -> List[Tuple[int, str, str]]:
+    def detect_chapters(self, markdown_text: str) -> List[Tuple[int, str, int]]:
         """
         Detect chapter boundaries.
         Returns list of (start_line_index, heading_text, heading_level).
@@ -28,14 +28,19 @@ class ChapterSplitter:
             for pattern in self.patterns:
                 match = pattern.match(line.strip())
                 if match:
-                    # Determine heading level by counting # at start
-                    level = 1
-                    if line.strip().startswith("#"):
-                        level = len(line.split()[0])  # count # characters
+                    # Determine heading level by counting # at start (FIXED)
+                    level = self._count_heading_level(line.strip())
                     chapters.append((i, line.strip(), level))
                     break
         
         return chapters
+    
+    def _count_heading_level(self, heading_line: str) -> int:
+        """Count heading level by counting # characters at the start."""
+        if not heading_line.startswith("#"):
+            return 1
+        match = re.match(r'^(#+)', heading_line)
+        return len(match.group(1)) if match else 1
     
     def split(self, markdown_path: Path, output_dir: Path) -> List[Path]:
         """
