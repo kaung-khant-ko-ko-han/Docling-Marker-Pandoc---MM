@@ -24,17 +24,16 @@ class MarkdownValidator:
         
         issues = []
         
-        # 1. Broken image references
+        # 1. Broken image references (SAFER)
         if images_dir and images_dir.exists():
             image_links = extract_image_links(content)
             for link in image_links:
-                # Resolve relative path relative to markdown's directory
-                abs_link = (markdown_path.parent / link).resolve()
-                if not abs_link.exists():
+                resolved = self._safe_resolve_image(markdown_path, link, images_dir)
+                if resolved is None and link:  # Only report if link is non-empty
                     issues.append(ValidationIssue(
                         type="broken_image",
                         file=str(markdown_path),
-                        description=f"Image not found: {link}",
+                        description=f"Image not found or unsafe path: {link}",
                         severity="error"
                     ))
         
@@ -86,6 +85,22 @@ class MarkdownValidator:
             total_warnings=len(warnings),
             markdown_file=str(markdown_path)
         )
+    
+    def _safe_resolve_image(self, markdown_path: Path, link: str, base_dir: Path) -> Optional[Path]:
+        """Safely resolve image path within base directory."""
+        try:
+            # Resolve relative to markdown file
+            target = (markdown_path.parent / link).resolve()
+            # Ensure target is within expected bounds (prevent directory traversal)
+            target_str = str(target)
+            base_str = str(base_dir.resolve())
+            if not (target_str.startswith(base_str) or target_str.startswith(str(markdown_path.parent.resolve()))):
+                logger.warning(f"Unsafe image path detected: {link}")
+                return None
+            return target if target.exists() else None
+        except (OSError, ValueError, RuntimeError) as e:
+            logger.debug(f"Error resolving image path {link}: {e}")
+            return None
     
     def validate_all(self, markdown_files: List[Path], images_dir: Optional[Path] = None) -> List[ValidationReport]:
         """Validate multiple markdown files."""
