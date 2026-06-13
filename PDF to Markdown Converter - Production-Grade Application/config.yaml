@@ -1,0 +1,20 @@
+# Default configuration for PDF-to-Markdown converter
+
+input_dir: ./books
+output_dir: ./output
+chunk_size: 20000          # characters per translation chunk
+chunk_lines: 1000          # max lines per chunk (fallback)
+workers: 4                 # parallel batch conversion workers
+extract_images: true
+split_chapters: true
+validation_enabled: true
+checkpoint_interval: 10    # pages between checkpoints (for resume)
+chapter_patterns:
+  - "^#\\s+(?:Chapter|Part|Section)\\s+\\d+"   # e.g., "# Chapter 1"
+  - "^##\\s+\\d+\\.\\d+"                      # e.g., "## 1.1"
+  - "^#{1,6}\\s+.+"                           # any markdown heading
+image_formats:
+  - .png
+  - .jpg
+  - .jpeg
+log_level: INFO
