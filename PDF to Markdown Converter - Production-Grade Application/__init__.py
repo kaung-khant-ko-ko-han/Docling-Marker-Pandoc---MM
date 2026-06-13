@@ -1,13 +1,13 @@
 """
-PDF to Markdown Converter - Production-Grade Application
+PDF မှ Markdown သို့ အသွင်းပြောင်းသည့် အစီအစဥ်မြူပ်မုံရံု
 
-A comprehensive Python application for converting PDF documents to Markdown format
-using the Marker library, with features for chapter splitting, translation chunking,
-image extraction, and quality validation.
+ဤအပ်လီကေးရှင်းသည် PDF ឯកសារမှ Markdown ပုံစံသို့ အသွင်းပြောင်းသည့်ကိရိယာတစ်ခုဖြစ်သည်။
+Marker လိုင်ဘ်ररီကို အသုံးပြု၍ အခန်းခွဲခြင်း၊ ဘာသာစကားပြန်ဆိုမှုအတွက် အပိုင်းခွဲခြင်း၊ 
+ပုံတွေထုတ်ယူခြင်း၊ နှင့် အရည်အသွေးအတည်ပြုခြင်းတွေကို ပါဝင်သည်။
 """
 
 __version__ = "1.0.0"
-__author__ = "Your Name"
+__author__ = "Kaung Khant Ko Ko Han"
 
 from .config import load_config
 from .converter import PDFConverter, batch_convert
